@@ -1,0 +1,812 @@
+{
+  "aggregate": {
+    "total_samples": 50,
+    "compilable_looking": 9,
+    "mi300x_aware": 3,
+    "avg_overall_score": 0.14199999999999993,
+    "compilable_pct": 18.0,
+    "mi300x_aware_pct": 6.0
+  },
+  "samples": [
+    {
+      "instruction": "Rewrite this GPU code as an optimized HIP kernel. Target: gfx942 architecture, wavefront-64, MFMA in",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCThreadDescriptor_M0_N0_M1_N1_M2_N2_N3_N4()\n    {\n        constexpr auto c_m0_m1_m2_n_tblk_lens = xdlops_gemm.GetCM0M1M2NThreadBlkLengths();\n\n        constexpr auto M0 = c_m0_m1_m2_n_tblk_lens[I0];\n        constexpr auto M1 = c_m0_m1_m2_n_tblk_lens[I1];\n "
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 2,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.2
+      },
+      "output_preview": "/* Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.\n *\n * Redistribution and use in source and binary forms, with or without\n * modification, are permitted provided that the following conditions\n * are met:\n *  * Redistributions of source code must retain the above copyright\n *    notice"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel implementation for AMD MI300X: amd xdlops (ck / utility / amd xdlops.h",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": true,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 1,
+        "overall_score": 0.2
+      },
+      "output_preview": "template <class FloatC>\n    __device__ static void Run(const bf8x8_t& reg_a, const bf8x8_t& reg_b, FloatC& reg_c)\n    {\n#if defined(__gfx94__)\n        reg_c.template AsType<float16_t>()(Number<0>{}) =\n            __builtin_amdgcn_mfma_f32_32x32x16_bf8_bf8(\n                bit_cast<int64_t>(reg_a),\n "
+    },
+    {
+      "instruction": "Rewrite this GPU code as an optimized HIP kernel. Target: gfx942 architecture, wavefront-64, MFMA in",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCThreadDescriptor_G_M0_N0_M1_N1_M2_M3_M4_N2()\n    {\n        constexpr auto c_m0_m1_m2_n_tblk_lens = xdlops_gemm.GetCM0M1M2NThreadBlkLengths();\n\n        constexpr auto M0 = c_m0_m1_m2_n_tblk_lens[I0];\n        constexpr auto M1 = c_m0_m1_m2_n_tblk_lens[I1];"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel implementation for AMD MI300X: type convert (ck / utility / type conve",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ f8x2_ocp_t f8_convert_rne<f8x2_ocp_t, float2_t>(float2_t x)\n{\n    return f8x2_ocp_t{\n        fp8_impl::cvt_float_to_fp8<f8_ocp_t::default_interpret, f8_ocp_t::default_saturation>(x)};\n}"
+    },
+    {
+      "instruction": "Generate an AMD MI300X-optimized HIP kernel equivalent to this CUDA code. Use wavefront-64 primitive",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": true,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 1,
+        "overall_score": 0.2
+      },
+      "output_preview": "__global__ void test_kernel(typename FFT::value_type* fft_data)\n{\n  typename FFT::value_type thread_data[FFT::storage_size];\n\n  const unsigned int offset = batch_offset(threadIdx.y, FFT::ffts_per_block);\n  constexpr unsigned int stride = FFT::stride;\n  unsigned int index = offset + threadIdx.x;\n  fo"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel implementation for AMD MI300X: amd xdlops (ck / utility / amd xdlops.h",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": true,
+          "vectorized": true,
+          "gfx942": false
+        },
+        "mi300x_score": 2,
+        "overall_score": 0.30000000000000004
+      },
+      "output_preview": "template <class FloatC>\n    __device__ static void Run(const f8x8_t& reg_a, const f8x8_t& reg_b, FloatC& reg_c)\n    {\n#if defined(__gfx94__)\n        reg_c.template AsType<float4_t>()(Number<0>{}) = __builtin_amdgcn_mfma_f32_16x16x32_fp8_fp8(\n            bit_cast<int64_t>(reg_a),\n            bit_cast"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel implementation for AMD MI300X: test mx bf8 (test / data type / test mx",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__global__ void test_mx_bf8_device_scaled_convert(uint64_t N, float* p_test, uint64_t* p_completed)\n{\n    test_mx_bf8_scaled_convert(N, p_test, p_completed);\n}"
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 3,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": true,
+          "MFMA": false,
+          "vectorized": true,
+          "gfx942": false
+        },
+        "mi300x_score": 2,
+        "overall_score": 0.5
+      },
+      "output_preview": "/*\n * SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.\n * SPDX-License-Identifier: Apache-2.0\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obta"
+    },
+    {
+      "instruction": "Translate this GPU operation to HIP, optimized for AMD Instinct MI300X with 192GB HBM3.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__device__ static Array<index_t, nDim>\n    UpdateMultiIndexGivenStepSizeOf1dIndex(Array<index_t, nDim> old_multi_id,\n                                           index_t step_size_of_1d_index,\n                                           integral_constant<bool, PositiveDirection>)\n    {\n        Array<in"
+    },
+    {
+      "instruction": "Rewrite this GPU code as an optimized HIP kernel. Target: gfx942 architecture, wavefront-64, MFMA in",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename T>\n    __host__ __device__ void operator()(T& y, const T& x) const\n    {\n        static_assert(is_same<T, float>::value || is_same<T, double>::value ||\n                          is_same<T, half_t>::value || is_same<T, int8_t>::value ||\n                          is_same<T, int32_t>"
+    },
+    {
+      "instruction": "Rewrite this GPU code as an optimized HIP kernel. Target: gfx942 architecture, wavefront-64, MFMA in",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCBlockDescriptor_M0_N0_M1_N1_M2_M3_M4_N2()\n    {\n        constexpr auto c_block_desc_m0_n0_m1_n1_m2_n2 =\n            make_naive_tensor_descriptor_packed(make_tuple(Number<MRepeat>{},\n                                                           Number<NRepea"
+    },
+    {
+      "instruction": "Translate this GPU operation to HIP, optimized for AMD Instinct MI300X with 192GB HBM3.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename T>\n    __host__ __device__ void operator()(T& y, const T& x) const\n    {\n        static_assert(is_same<T, float>::value || is_same<T, double>::value ||\n                          is_same<T, half_t>::value || is_same<T, int8_t>::value ||\n                          is_same<T, int32_t>"
+    },
+    {
+      "instruction": "Write a high-performance HIP implementation of the following GPU code targeting AMD MI300X.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCBlockDescriptor_G_M0_N0_M1_N1_M2_M3_M4_N2()\n    {\n        constexpr auto c_block_desc_g_m0_n0_m1_n1_m2_n2 =\n            make_naive_tensor_descriptor_packed(make_tuple(I1,\n                                                           Number<MRepeat>{},\n     "
+    },
+    {
+      "instruction": "Translate this GPU operation to HIP, optimized for AMD Instinct MI300X with 192GB HBM3.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCThreadDescriptor_M0_N0_M1_N1_M2_N2_N3_N4()\n    {\n        constexpr auto c_m_n_tblk_lens = dpp_gemm.GetCMNThreadBlkLengths();\n        constexpr auto M               = c_m_n_tblk_lens[I0];\n        constexpr auto N               = c_m_n_tblk_lens[I1];\n\n    "
+    },
+    {
+      "instruction": "Rewrite this GPU code as an optimized HIP kernel. Target: gfx942 architecture, wavefront-64, MFMA in",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename ABlockDesc_AK0_M_AK1>\n    __host__ __device__ static constexpr auto\n    MakeAMmaTileDescriptor_M0_M1_M2_K(const ABlockDesc_AK0_M_AK1&)\n    {\n        constexpr index_t MWaves = MPerBlock / (MXdlPerWave * MPerXdl);\n\n        return MakeGemmMmaTileDescriptor<MXdlPerWave, MWaves, MPerX"
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 0,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.0
+      },
+      "output_preview": "/* Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.\n *\n * Redistribution and use in source and binary forms, with or without\n * modification, are permitted provided that the following conditions\n * are met:\n *  * Redistributions of source code must retain the above copyright\n *    notice"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel implementation for AMD MI300X: scaled type convert (ck / utility / sca",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ bf6_t scaled_type_convert<bf6_t, float>(e8m0_bexp_t scale, float x)\n{\n#if CK_USE_SR_F6_CONVERSION\n    return bf6_convert_sr(x, type_convert<float>(scale));\n#else\n    return bf6_convert_rne(x, type_convert<float>(scale));\n#endif\n}"
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 2,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": true,
+          "MFMA": false,
+          "vectorized": true,
+          "gfx942": false
+        },
+        "mi300x_score": 2,
+        "overall_score": 0.4
+      },
+      "output_preview": "/* Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.\n *\n * Redistribution and use in source and binary forms, with or without\n * modification, are permitted provided that the following conditions\n * are met:\n *  * Redistributions of source code must retain the above copyright\n *    notice"
+    },
+    {
+      "instruction": "Translate this GPU operation to HIP, optimized for AMD Instinct MI300X with 192GB HBM3.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename T>\n    __host__ __device__ void operator()(T& y, const T& x) const\n    {\n        static_assert(is_same<T, float>::value || is_same<T, double>::value ||\n                          is_same<T, half_t>::value || is_same<T, int8_t>::value ||\n                          is_same<T, int32_t>"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel implementation for AMD MI300X: unary element wise operation (gpu / ele",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <>\n    __host__ __device__ void operator()<f8_t, f8_t>(f8_t& e, const f8_t& c) const\n    {\n        const float c_float = type_convert<float>(c);\n        e                   = type_convert<f8_t>(c_float * scale_in_ * scale_wei_ * scale_out_);\n    }"
+    },
+    {
+      "instruction": "Generate an AMD MI300X-optimized HIP kernel equivalent to this GPU code. Use wavefront-64 primitives",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCBlockDescriptor_M0_N0_M1_N1_M2_M3_M4_N2()\n    {\n        constexpr auto c_block_desc_m0_n0_m1_n1_m2_n2 =\n            make_naive_tensor_descriptor_packed(make_tuple(Number<MRepeat>{},\n                                                           Number<NRepea"
+    },
+    {
+      "instruction": "Rewrite this GPU code as an optimized HIP kernel. Target: gfx942 architecture, wavefront-64, MFMA in",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCThreadDescriptor_M0_N0_M1_N1_M2_N2()\n    {\n        constexpr auto c_m_n_tblk_lens = dpp_gemm.GetCMNThreadBlkLengths();\n        constexpr auto M               = c_m_n_tblk_lens[I0];\n        constexpr auto N               = c_m_n_tblk_lens[I1];\n\n        re"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel implementation for AMD MI300X: type convert (ck / utility / type conve",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ f4x2_pk_t type_convert<f4x2_pk_t, float2_t>(float2_t x)\n{\n    return static_cast<f4x2_pk_t>(type_convert<f4x2_t>(x));\n}"
+    },
+    {
+      "instruction": "Write a high-performance HIP implementation of the following GPU code targeting AMD MI300X.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCThreadDescriptor_M0_N0_M1_N1_M2_M3_M4_N2()\n    {\n        constexpr auto c_m0_m1_m2_n_tblk_lens = xdlops_gemm.GetCM0M1M2NThreadBlkLengths();\n\n        constexpr auto M0 = c_m0_m1_m2_n_tblk_lens[I0];\n        constexpr auto M1 = c_m0_m1_m2_n_tblk_lens[I1];\n "
+    },
+    {
+      "instruction": "Generate an AMD MI300X-optimized HIP kernel equivalent to this GPU code. Use wavefront-64 primitives",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCBlockDescriptor_M0_N0_M1_N1_M2_M3_M4_N2()\n    {\n        constexpr auto c_block_desc_m0_n0_m1_n1_m2_n2 =\n            make_naive_tensor_descriptor_packed(make_tuple(Number<MRepeat>{},\n                                                           Number<NRepea"
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 2,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.2
+      },
+      "output_preview": "/*\n * SPDX-FileCopyrightText: Copyright (c) 2019 NVIDIA CORPORATION & AFFILIATES. All rights reserved.\n * SPDX-License-Identifier: Apache-2.0\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a "
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 2,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.2
+      },
+      "output_preview": "/*\n * SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.\n * SPDX-License-Identifier: Apache-2.0\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a "
+    },
+    {
+      "instruction": "Write a high-performance HIP implementation of the following GPU code targeting AMD MI300X.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename T>\n    __host__ __device__ void operator()(T& y, const T& x) const\n    {\n        static_assert(is_same<T, float>::value || is_same<T, double>::value ||\n                          is_same<T, half_t>::value || is_same<T, int8_t>::value ||\n                          is_same<T, int32_t>"
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__global__ void generate_merkle_tree_kernel(tree<Merkle::MerkleSize, Hash, Precision> merkle, const Precision* msg, size_t inbuf_len)\n{\n    Hash hash{};\n    for(uint32_t i = threadIdx.x; i < Merkle::MerkleSize; i += blockDim.x) {\n        Merkle().create_leaf(merkle.nodes + i * merkle.digest_size, ms"
+    },
+    {
+      "instruction": "Write an AMD GPU-optimized HIP kernel for: rocblas rot kernels (library / blas1 / rocblas rot kernel",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__device__ void\n    rocblas_rot_kernel_calc(rocblas_int n, Tx* x, int64_t incx, Ty* y, int64_t incy, Tc c, Ts s)\n{\n    int64_t tid = blockIdx.x * blockDim.x + threadIdx.x;\n\n    if(tid < n)\n    {\n        int64_t ix    = tid * incx;\n        int64_t iy    = tid * incy;\n        Tex     tempx = Tex(c * x"
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__global__ void\nsimple_wmma_tf32gemm(float *a, float *b, float *c, float *d, int m_ld, int n_ld, int k_ld, float alpha, float beta)\n{\n#if __CUDA_ARCH__ >= 800\n    // Leading dimensions. Packed with no transpositions.\n    int lda = k_ld;\n    int ldb = k_ld;\n    int ldc = n_ld;\n\n    // Tile using a 2D"
+    },
+    {
+      "instruction": "Convert this GPU code to an optimized HIP kernel for AMD MI300X (gfx942).",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCThreadDescriptor_M0_N0_M1_N1_M2_M3_M4_N2()\n    {\n        constexpr auto c_m0_m1_m2_n_tblk_lens = xdlops_gemm.GetCM0M1M2NThreadBlkLengths();\n\n        constexpr auto M0 = c_m0_m1_m2_n_tblk_lens[I0];\n        constexpr auto M1 = c_m0_m1_m2_n_tblk_lens[I1];\n "
+    },
+    {
+      "instruction": "Convert this GPU code to an optimized HIP kernel for AMD MI300X (gfx942).",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCBlockDescriptor_M0_N0_M1_N1_M2_M3_M4_N2()\n    {\n        constexpr auto c_block_desc_m0_n0_m1_n1_m2_n2 =\n            make_naive_tensor_descriptor_packed(make_tuple(Number<MRepeat>{},\n                                                           Number<NRepea"
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 3,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": true,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 1,
+        "overall_score": 0.4
+      },
+      "output_preview": "/* Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.\n *\n * Redistribution and use in source and binary forms, with or without\n * modification, are permitted provided that the following conditions\n * are met:\n *  * Redistributions of source code must retain the above copyright\n *    notice"
+    },
+    {
+      "instruction": "Produce a hand-tuned HIP kernel for MI300X from this CUDA input. Maximize TFLOPS.",
+      "scores": {
+        "has_hip_markers": 0,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.0
+      },
+      "output_preview": "/*\n * SPDX-FileCopyrightText: Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.\n * SPDX-License-Identifier: Apache-2.0\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obta"
+    },
+    {
+      "instruction": "Create an AMD GPU kernel (HIP/ROCm) for MI300X that implements this CUDA operation with maximum perf",
+      "scores": {
+        "has_hip_markers": 3,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.3
+      },
+      "output_preview": "/* Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.\n *\n * Redistribution and use in source and binary forms, with or without\n * modification, are permitted provided that the following conditions\n * are met:\n *  * Redistributions of source code must retain the above copyright\n *    notice"
+    },
+    {
+      "instruction": "Produce a hand-tuned HIP kernel for MI300X from this GPU input. Maximize TFLOPS.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__device__ static constexpr auto PushBack(Sequence<Xs...>)\n    {\n        return Sequence<Is..., Xs...>{};\n    }"
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 3,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.3
+      },
+      "output_preview": "/* Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.\n *\n * Redistribution and use in source and binary forms, with or without\n * modification, are permitted provided that the following conditions\n * are met:\n *  * Redistributions of source code must retain the above copyright\n *    notice"
+    },
+    {
+      "instruction": "Generate an AMD MI300X-optimized HIP kernel equivalent to this GPU code. Use wavefront-64 primitives",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename T>\n    __host__ __device__ void operator()(T& y, const T& x) const\n    {\n        static_assert(is_same<T, float>::value || is_same<T, double>::value ||\n                          is_same<T, half_t>::value || is_same<T, int8_t>::value ||\n                          is_same<T, int32_t>"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel implementation for AMD MI300X: TODO: all the batch/nhead offset will a",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__device__ T* get_base(int i_b, int i_h)\n        {\n            if constexpr(Layout == naive_attention_layout_enum::BSHD)\n                return base_ptr + i_b * s * h * d + i_h * d;\n            else if constexpr(Layout == naive_attention_layout_enum::BHSD)\n                return base_ptr + i_b * s *"
+    },
+    {
+      "instruction": "Produce a hand-tuned HIP kernel for MI300X from this CUDA input. Maximize TFLOPS.",
+      "scores": {
+        "has_hip_markers": 2,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": true,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 1,
+        "overall_score": 0.30000000000000004
+      },
+      "output_preview": "/*\n * SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.\n * SPDX-License-Identifier: Apache-2.0\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obta"
+    },
+    {
+      "instruction": "Generate an AMD MI300X-optimized HIP kernel equivalent to this GPU code. Use wavefront-64 primitives",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename T>\n    __host__ __device__ void operator()(T& y, const T& x) const\n    {\n        static_assert(is_same<T, float>::value || is_same<T, double>::value ||\n                          is_same<T, half_t>::value || is_same<T, int8_t>::value ||\n                          is_same<T, int32_t>"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel for the deep learning operation: static kernel threadwise generic tens",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename SrcData, typename DstData>\n    __device__ void Run_optimized_dst_address_calculation(\n        const SrcData* p_src,\n        DstData* p_dst,\n        SrcData src_out_of_bound_value = type_convert<SrcData>{}"
+    },
+    {
+      "instruction": "Rewrite this GPU code as an optimized HIP kernel. Target: gfx942 architecture, wavefront-64, MFMA in",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__host__ __device__ static constexpr auto GetCBlockDescriptor_M0_N0_M1_N1_M2_M3_M4_N2()\n    {\n        constexpr auto c_block_desc_m0_n0_m1_n1_m2_n2 =\n            make_naive_tensor_descriptor_packed(make_tuple(Number<MRepeat>{},\n                                                           Number<NRepea"
+    },
+    {
+      "instruction": "Convert the following CUDA kernel to an optimized HIP kernel for AMD MI300X GPU. Use appropriate AMD",
+      "scores": {
+        "has_hip_markers": 0,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.0
+      },
+      "output_preview": "/*\n * SPDX-FileCopyrightText: Copyright (c) 2024-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.\n * SPDX-License-Identifier: Apache-2.0\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obta"
+    },
+    {
+      "instruction": "Write an optimized HIP kernel implementation for AMD MI300X: amd xdlops (ck / utility / amd xdlops.h",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": true,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 1,
+        "overall_score": 0.2
+      },
+      "output_preview": "template <class FloatC>\n    __device__ static void Run(const float& reg_a, const float& reg_b, FloatC& reg_c)\n    {\n        reg_c.template AsType<float16_t>()(Number<0>{}) = __builtin_amdgcn_mfma_f32_32x32x2f32(\n            reg_a, reg_b, reg_c.template AsType<float16_t>()[Number<0>{}], 0, 0, 0);\n   "
+    },
+    {
+      "instruction": "Translate this GPU operation to HIP, optimized for AMD Instinct MI300X with 192GB HBM3.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename T>\n    __host__ __device__ void operator()(T& y, const T& x) const\n    {\n        static_assert(is_same<T, float>::value || is_same<T, double>::value ||\n                          is_same<T, half_t>::value || is_same<T, int8_t>::value ||\n                          is_same<T, int32_t>"
+    },
+    {
+      "instruction": "Write a high-performance HIP implementation of the following GPU code targeting AMD MI300X.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "__device__ __host__ float convert_bf16_to_fp32(ushort src_val)\n{\n    value_bf16_fp32_t target_val;\n    target_val.ushortx2 = make_ushort2(0, src_val);\n    return target_val.f32;\n}"
+    },
+    {
+      "instruction": "Translate this GPU operation to HIP, optimized for AMD Instinct MI300X with 192GB HBM3.",
+      "scores": {
+        "has_hip_markers": 1,
+        "has_mi300x_optims": {
+          "wavefront-64": false,
+          "LDS usage": false,
+          "MFMA": false,
+          "vectorized": false,
+          "gfx942": false
+        },
+        "mi300x_score": 0,
+        "overall_score": 0.1
+      },
+      "output_preview": "template <typename T>\n    __host__ __device__ void operator()(T& y, const T& x) const\n    {\n        static_assert(is_same<T, float>::value || is_same<T, double>::value ||\n                          is_same<T, half_t>::value || is_same<T, int8_t>::value ||\n                          is_same<T, int32_t>"
+    }
+  ]
+}
