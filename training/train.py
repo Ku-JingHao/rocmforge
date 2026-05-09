@@ -175,7 +175,6 @@ def main():
         gradient_checkpointing_kwargs={"use_reentrant": False},
         dataloader_pin_memory=True,
         dataloader_num_workers=4,
-        remove_unused_columns=False,
     )
 
     # --- Trainer ---

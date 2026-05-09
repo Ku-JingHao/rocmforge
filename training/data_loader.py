@@ -129,6 +129,9 @@ def prepare_dataset(
         desc="Formatting val",
     )
 
+    train_dataset = train_dataset.remove_columns(["messages"])
+    val_dataset = val_dataset.remove_columns(["messages"])
+
     train_dataset = train_dataset.filter(lambda ex: len(ex["text"]) > 50)
     val_dataset = val_dataset.filter(lambda ex: len(ex["text"]) > 50)
 
