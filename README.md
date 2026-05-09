@@ -1,7 +1,5 @@
 # ROCmForge — The AMD Performance Compiler
 
-**AMD Developer Hackathon · Track 2: Fine-Tuning on AMD GPUs**
-
 ROCmForge is a fine-tuned LLM (Qwen2.5-Coder-7B) that converts PyTorch / CUDA /
 Triton / natural-language descriptions into hand-tuned **HIP / ROCm kernels
 optimized for AMD Instinct MI300X (gfx942)**. The model is trained to use
