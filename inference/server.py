@@ -13,6 +13,7 @@ Run with:
 """
 
 import asyncio
+import json
 import logging
 import os
 import shutil
@@ -270,11 +271,8 @@ async def compile_stream(req: CompileRequest):
             await asyncio.sleep(0.01)
 
         hip_code, warnings = extract_hip_code(full_output)
-        hip_escaped = hip_code.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
-        yield (
-            f"event: done\ndata: {{\"hip_code\": \"{hip_escaped}\", "
-            f"\"warnings\": {warnings}}}\n\n"
-        ).encode()
+        done_payload = json.dumps({"hip_code": hip_code, "warnings": warnings})
+        yield f"event: done\ndata: {done_payload}\n\n".encode()
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
@@ -298,16 +296,24 @@ async def benchmark_endpoint(req: BenchmarkRequest):
             )
 
         operation = req.operation if req.operation != "auto" else _detect_operation(req.hip_code)
-        bench = await benchmark_binary(
-            compile_result["binary_path"],
-            work_dir,
-            operation,
-            req.problem_size,
-        )
-
         baselines = await asyncio.to_thread(
             get_all_baselines, operation, req.problem_size, req.dtype
         )
+
+        # The kernel compiles to an object file (-c) so there is no standalone
+        # executable to profile with rocprof.  We report compilation success and
+        # baseline numbers only; the generated-kernel column stays None.
+        binary_path = compile_result.get("binary_path", "")
+        is_executable = binary_path and not binary_path.endswith(".o")
+
+        bench: dict = {}
+        if is_executable and is_rocprof_available():
+            bench = await benchmark_binary(
+                binary_path,
+                work_dir,
+                operation,
+                req.problem_size,
+            )
 
         speedup_eager = None
         speedup_compile = None

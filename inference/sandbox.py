@@ -26,6 +26,23 @@ TARGET_ARCH = os.environ.get("ROCMFORGE_TARGET_ARCH", "gfx942")
 COMPILE_TIMEOUT_SEC = 60
 EXECUTE_TIMEOUT_SEC = 30
 
+# Standard headers that every generated kernel needs.
+# Models frequently omit these; we inject them if they are missing.
+_REQUIRED_HEADERS = [
+    "#include <hip/hip_runtime.h>",
+    "#include <hip/hip_fp16.h>",
+    "#include <hip/hip_bfloat16.h>",
+    "#include <hip/math_functions.h>",
+]
+
+
+def _ensure_headers(code: str) -> str:
+    """Prepend any missing standard HIP headers to the kernel source."""
+    missing = [h for h in _REQUIRED_HEADERS if h not in code]
+    if not missing:
+        return code
+    return "\n".join(missing) + "\n\n" + code
+
 
 def extract_hip_code(raw_output: str) -> tuple[str, list[str]]:
     """
@@ -82,17 +99,20 @@ async def compile_hip(hip_code: str, work_dir: Optional[Path] = None) -> dict:
         work_dir.mkdir(parents=True, exist_ok=True)
 
     src_path = work_dir / "kernel.hip"
-    bin_path = work_dir / "kernel.bin"
+    obj_path = work_dir / "kernel.o"
 
-    src_path.write_text(hip_code)
+    src_path.write_text(_ensure_headers(hip_code))
 
+    # Compile to object file (-c) so no main() is required.
+    # This validates the kernel's syntax and codegen without needing a harness.
     cmd = [
         HIPCC_PATH,
         f"--offload-arch={TARGET_ARCH}",
         "-O3",
         "-std=c++17",
+        "-c",
         str(src_path),
-        "-o", str(bin_path),
+        "-o", str(obj_path),
     ]
 
     logger.info("Running hipcc: %s", " ".join(cmd))
@@ -116,16 +136,21 @@ async def compile_hip(hip_code: str, work_dir: Optional[Path] = None) -> dict:
         }
 
     if process.returncode != 0:
+        error_text = stderr.decode("utf-8", errors="replace")
+        # Strip the "failed to execute" wrapper line so the user sees the
+        # actual clang diagnostic, not the hipcc driver boilerplate.
+        lines = [l for l in error_text.splitlines()
+                 if not l.startswith("failed to execute:")]
         return {
             "success": False,
-            "error": stderr.decode("utf-8", errors="replace")[:4000],
+            "error": "\n".join(lines)[:4000],
             "binary_path": None,
         }
 
     return {
         "success": True,
         "error": None,
-        "binary_path": str(bin_path),
+        "binary_path": str(obj_path),
         "work_dir": str(work_dir),
         "_cleanup": cleanup,
     }

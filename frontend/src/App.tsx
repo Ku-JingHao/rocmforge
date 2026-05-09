@@ -142,7 +142,17 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400">{PHASE_LABEL[phase]}</span>
+            <span
+              className={`text-xs font-medium ${
+                phase === 'done'
+                  ? 'text-green-400'
+                  : phase === 'error'
+                  ? 'text-red-400'
+                  : 'text-slate-400'
+              }`}
+            >
+              {phase === 'done' ? '✓ Complete' : PHASE_LABEL[phase]}
+            </span>
             <button
               onClick={startStream}
               disabled={streaming || phase === 'generating'}
@@ -174,7 +184,15 @@ export default function App() {
           </div>
           <div className="panel overflow-hidden">
             <div className="flex items-center justify-between border-b border-slate-800 bg-slate-900/60 px-3 py-2 text-xs uppercase tracking-wider text-slate-400">
-              <span>Output — HIP / ROCm</span>
+              <span>
+                Output — HIP / ROCm
+                {phase === 'done' && outputCode && (
+                  <span className="ml-2 normal-case text-green-400 font-medium">✓ Generation complete</span>
+                )}
+                {streaming && (
+                  <span className="ml-2 normal-case text-amber-400">streaming…</span>
+                )}
+              </span>
               {outputCode && (
                 <button
                   onClick={() => navigator.clipboard.writeText(outputCode)}
