@@ -19,11 +19,10 @@ import yaml
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    TrainingArguments,
     EarlyStoppingCallback,
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 
 from data_loader import prepare_dataset
 
@@ -118,12 +117,23 @@ def main():
     print("[2/5] Loading model...")
     model = AutoModelForCausalLM.from_pretrained(
         model_cfg["name"],
-        torch_dtype=getattr(torch, model_cfg["torch_dtype"]),
+        dtype=getattr(torch, model_cfg["torch_dtype"]),
         device_map="auto",
         attn_implementation=model_cfg.get("attn_implementation", "eager"),
         trust_remote_code=model_cfg.get("trust_remote_code", True),
     )
     model.config.use_cache = False  # Required for gradient checkpointing
+
+    # Required for gradient checkpointing + LoRA: ensures the embedding
+    # output has requires_grad=True so gradients flow through recomputed
+    # segments during the backward pass. Without this, grad_norm is NaN
+    # from step 1 and model weights become NaN after the first update.
+    if hasattr(model, "enable_input_require_grads"):
+        model.enable_input_require_grads()
+    else:
+        model.get_input_embeddings().register_forward_hook(
+            lambda _, __, out: out.requires_grad_(True)
+        )
 
     # --- Apply LoRA ---
     print("[3/5] Applying LoRA adapter...")
@@ -150,7 +160,7 @@ def main():
 
     # --- Training Arguments ---
     print("\n[5/5] Starting training...")
-    training_args = TrainingArguments(
+    sft_config = SFTConfig(
         output_dir=train_cfg["output_dir"],
         num_train_epochs=train_cfg["num_train_epochs"],
         per_device_train_batch_size=train_cfg["per_device_train_batch_size"],
@@ -175,18 +185,18 @@ def main():
         gradient_checkpointing_kwargs={"use_reentrant": False},
         dataloader_pin_memory=True,
         dataloader_num_workers=4,
+        dataset_text_field="text",
+        max_seq_length=train_cfg["max_seq_length"],
+        packing=False,
     )
 
     # --- Trainer ---
     trainer = SFTTrainer(
         model=model,
-        args=training_args,
+        args=sft_config,
         train_dataset=dataset["train"],
         eval_dataset=dataset["validation"],
-        tokenizer=tokenizer,
-        dataset_text_field="text",
-        max_seq_length=train_cfg["max_seq_length"],
-        packing=False,
+        processing_class=tokenizer,
     )
 
     # --- Train ---
