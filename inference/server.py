@@ -9,7 +9,7 @@ Endpoints:
   POST /api/full_pipeline     — compile + benchmark in one call (for demo)
 
 Run with:
-  uvicorn inference.server:app --host 0.0.0.0 --port 8000
+  uvicorn inference.server:app --host 0.0.0.0 --port 8001
 """
 
 import asyncio

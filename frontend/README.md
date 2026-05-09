@@ -20,11 +20,11 @@ npm run dev
 
 Open http://localhost:5173
 
-By default the dev server proxies `/api/*` to `http://localhost:8000` (the FastAPI
+By default the dev server proxies `/api/*` to `http://localhost:8001` (the FastAPI
 backend). Override with:
 
 ```bash
-VITE_API_URL=https://your-mi300x-host:8000 npm run dev
+VITE_API_URL=https://your-mi300x-host:8001 npm run dev
 ```
 
 ## Build for production

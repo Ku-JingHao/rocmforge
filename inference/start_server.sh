@@ -38,17 +38,17 @@ if [ ! -d "$ROCMFORGE_MODEL_PATH" ]; then
     exit 1
 fi
 
+PORT="${PORT:-8001}"
+HOST="${HOST:-0.0.0.0}"
+
 echo "============================================="
 echo "  ROCmForge — Inference Server"
 echo "============================================="
 echo "  Model:     $ROCMFORGE_MODEL_PATH"
 echo "  Engine:    $([ "$ROCMFORGE_USE_VLLM" = "1" ] && echo "vLLM" || echo "HuggingFace")"
 echo "  Target:    $ROCMFORGE_TARGET_ARCH"
-echo "  Endpoint:  http://0.0.0.0:8000"
+echo "  Endpoint:  http://${HOST}:${PORT}"
 echo ""
-
-PORT="${PORT:-8000}"
-HOST="${HOST:-0.0.0.0}"
 
 # Use module path so relative imports work
 exec python -m uvicorn inference.server:app \

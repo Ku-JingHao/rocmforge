@@ -34,7 +34,7 @@ bash training/run_training.sh
 
 ```bash
 bash inference/start_server.sh
-# FastAPI + vLLM at http://0.0.0.0:8000
+# FastAPI + vLLM at http://0.0.0.0:8001 (override with PORT=...)
 ```
 
 ### 4. Run the demo UI (Phase 4 — anywhere)
