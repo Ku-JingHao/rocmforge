@@ -164,7 +164,7 @@ def main():
         output_dir=train_cfg["output_dir"],
         num_train_epochs=train_cfg["num_train_epochs"],
         per_device_train_batch_size=train_cfg["per_device_train_batch_size"],
-        per_device_eval_batch_size=train_cfg.get("per_device_eval_batch_size", 2),
+        per_device_eval_batch_size=train_cfg.get("per_device_eval_batch_size", 1),
         gradient_accumulation_steps=train_cfg["gradient_accumulation_steps"],
         learning_rate=train_cfg["learning_rate"],
         lr_scheduler_type=train_cfg["lr_scheduler_type"],
@@ -196,7 +196,7 @@ def main():
         args=sft_config,
         train_dataset=dataset["train"],
         eval_dataset=dataset["validation"],
-        processing_class=tokenizer,
+        tokenizer=tokenizer,
     )
 
     # --- Train ---
@@ -219,6 +219,8 @@ def main():
     metrics = trainer.state.log_history
     train_losses = [m["loss"] for m in metrics if "loss" in m]
     eval_losses = [m["eval_loss"] for m in metrics if "eval_loss" in m]
+    grad_norms = [m["grad_norm"] for m in metrics if "grad_norm" in m]
+
     if train_losses:
         print(f"  Final train loss: {train_losses[-1]:.4f}")
     if eval_losses:
@@ -227,6 +229,22 @@ def main():
     print(f"\n  Adapter saved to: {final_adapter_dir}")
     print(f"  Next: Run 'python training/merge_model.py' to create deployable model")
     print("")
+
+    import math
+    has_nan_grads = any(math.isnan(g) for g in grad_norms if isinstance(g, float))
+    has_nan_eval = any(math.isnan(e) for e in eval_losses if isinstance(e, float))
+    has_zero_loss = len(train_losses) > 2 and all(l == 0.0 for l in train_losses[1:])
+
+    if has_nan_grads or has_nan_eval or has_zero_loss:
+        print("[ERROR] Training produced NaN gradients or losses.")
+        print("        The saved adapter is CORRUPT and must not be used.")
+        if has_nan_grads:
+            print("        - grad_norm was NaN (backward pass is broken)")
+        if has_nan_eval:
+            print("        - eval_loss was NaN")
+        if has_zero_loss:
+            print("        - train loss collapsed to 0.0 (weights became NaN)")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
