@@ -1,0 +1,32 @@
+# ROCmForge - Data Pipeline & Training Dependencies
+# Install: pip install -r requirements.txt
+# (or run training/setup_instance.sh on the MI300X instance)
+
+# === Data Pipeline (runs anywhere, no GPU) ===
+# Uses Python stdlib only (json, re, pathlib, subprocess) — no extra deps.
+
+# === Training (run on MI300X instance) ===
+# Install PyTorch ROCm separately:
+#   pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.2
+
+pyyaml>=6.0
+transformers>=4.44.0,<5.0.0
+peft>=0.12.0
+trl>=0.9.0,<0.12.0
+datasets>=2.20.0
+accelerate>=0.33.0
+wandb>=0.17.0
+
+# === Serving (Phase 3 — install separately) ===
+# pip install vllm
+# OR use ROCm Docker image:  rocm/vllm:latest
+fastapi>=0.111.0
+uvicorn>=0.30.0
+
+# === Evaluation ===
+pandas>=2.2.0
+numpy>=1.26.0
+
+# NOTE: bitsandbytes is intentionally NOT listed.
+#   Default bitsandbytes is CUDA-only and crashes on ROCm.
+#   We use optim: "adamw_torch" which works natively.

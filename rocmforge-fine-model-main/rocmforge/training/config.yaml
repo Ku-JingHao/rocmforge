@@ -1,0 +1,79 @@
+# ROCmForge Training Configuration
+# Target: Qwen2.5-Coder-7B-Instruct + QLoRA on AMD MI300X
+
+# === Model ===
+model:
+  name: "Qwen/Qwen2.5-Coder-7B-Instruct"
+  torch_dtype: "bfloat16"
+  # "sdpa" is PyTorch's built-in scaled-dot-product attention.
+  # Works natively on ROCm with no extra packages, ~95% as fast as Flash Attention 2.
+  # If you have flash-attn installed (ROCm build), you can switch to "flash_attention_2".
+  attn_implementation: "sdpa"
+  trust_remote_code: true
+
+# === LoRA Configuration ===
+lora:
+  r: 64                    # Rank — higher = more capacity but slower
+  lora_alpha: 128          # Scaling factor (alpha/r = 2.0)
+  lora_dropout: 0.05
+  bias: "none"
+  task_type: "CAUSAL_LM"
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+
+# === Training Hyperparameters ===
+training:
+  output_dir: "./checkpoints"
+  num_train_epochs: 2
+  per_device_train_batch_size: 2
+  per_device_eval_batch_size: 2
+  gradient_accumulation_steps: 8     # Effective batch size: 2 * 8 = 16
+  learning_rate: 2.0e-4
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  bf16: true
+  gradient_checkpointing: true       # Saves VRAM at cost of ~20% slower
+  # adamw_torch: native PyTorch optimizer, works on ROCm without bitsandbytes.
+  # Uses ~2GB more VRAM than adamw_8bit but MI300X has 192GB so it's fine.
+  optim: "adamw_torch"
+  max_seq_length: 8192               # MI300X 192GB enables long context
+
+  # Logging & Saving
+  logging_steps: 10
+  save_steps: 500
+  eval_steps: 500
+  save_total_limit: 3                # Keep last 3 checkpoints only
+  eval_strategy: "steps"
+  load_best_model_at_end: true
+  metric_for_best_model: "eval_loss"
+
+  # Reporting (set to "none" if no wandb account)
+  report_to: "none"
+
+# === Data ===
+data:
+  train_file: "./data/processed/train.jsonl"
+  val_file: "./data/processed/val.jsonl"
+  max_samples: null                  # Set to integer to limit (for testing)
+
+# === System Prompt ===
+system_prompt: |
+  You are ROCmForge, an expert AMD GPU kernel optimizer. You specialize in:
+  - Converting PyTorch, CUDA, and Triton code to optimized HIP kernels
+  - Targeting AMD Instinct MI300X (gfx942) architecture
+  - Using wavefront-64 operations, MFMA intrinsics, and LDS optimization
+  - Maximizing TFLOPS and memory bandwidth utilization
+  Generate compilable, correct, high-performance HIP/ROCm code.
+
+# === Output ===
+output:
+  merged_model_dir: "./rocmforge-7b-merged"
+  hub_model_id: null                 # Set to push to HuggingFace Hub
