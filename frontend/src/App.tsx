@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { Header } from './components/Header';
 import { GeneratePage } from './pages/GeneratePage';
 import { ComparePage } from './pages/ComparePage';
+import { LiveComparePage } from './pages/LiveComparePage';
 import { EvalPage } from './pages/EvalPage';
 
-type Tab = 'generate' | 'compare' | 'eval';
+type Tab = 'generate' | 'compare' | 'live' | 'eval';
 
 const TABS: { id: Tab; label: string; desc: string }[] = [
-  { id: 'generate',  label: 'Generate',       desc: 'Live kernel generation & benchmark' },
-  { id: 'compare',   label: 'Compare Models',  desc: 'Base model vs ROCmForge side-by-side' },
-  { id: 'eval',      label: 'Eval Results',    desc: '50-sample held-out evaluation' },
+  { id: 'generate', label: 'Generate',       desc: 'Live kernel generation & benchmark' },
+  { id: 'compare',  label: 'Compare Models', desc: 'Curated side-by-side diff examples' },
+  { id: 'live',     label: 'Live Compare',   desc: 'Both models run live — judge-proof demo' },
+  { id: 'eval',     label: 'Eval Results',   desc: '50-sample held-out evaluation dashboard' },
 ];
 
 export default function App() {
@@ -45,6 +47,7 @@ export default function App() {
       <main className="flex-1">
         {tab === 'generate' && <GeneratePage />}
         {tab === 'compare'  && <ComparePage />}
+        {tab === 'live'     && <LiveComparePage />}
         {tab === 'eval'     && <EvalPage />}
       </main>
 

@@ -39,3 +39,6 @@ rocmforge/eval/eval_results.json
 
 # Sandbox tempdirs (just in case)
 rocmforge/rocmforge_sandbox_*/
+
+checkpoints/
+rocmforge-7b-merged/

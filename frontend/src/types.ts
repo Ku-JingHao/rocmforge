@@ -38,6 +38,24 @@ export interface FullPipelineResponse {
   benchmark_error?: string;
 }
 
+export interface CompareModelOutput {
+  hip_code: string;
+  raw_output: string;
+  time_s: number;
+  warnings: string[];
+}
+
+export interface CompareBaseOutput extends CompareModelOutput {
+  available: boolean;
+  error?: string | null;
+  model_name: string;
+}
+
+export interface CompareResponse {
+  rocmforge: CompareModelOutput;
+  base: CompareBaseOutput;
+}
+
 export interface HealthResponse {
   status: 'ok' | 'degraded' | 'down';
   model_loaded: boolean;

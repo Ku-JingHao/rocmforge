@@ -18,6 +18,7 @@ import logging
 import os
 import shutil
 import tempfile
+import time
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -44,6 +45,9 @@ logger = logging.getLogger(__name__)
 MODEL_PATH = os.environ.get("ROCMFORGE_MODEL_PATH", "./rocmforge-7b-merged")
 MODEL_NAME = os.environ.get("ROCMFORGE_MODEL_NAME", "rocmforge-7b")
 USE_VLLM = os.environ.get("ROCMFORGE_USE_VLLM", "1") == "1"
+BASE_MODEL_PATH = os.environ.get(
+    "ROCMFORGE_BASE_MODEL_PATH", "Qwen/Qwen2.5-Coder-7B-Instruct"
+)
 SYSTEM_PROMPT = """You are ROCmForge, an expert AMD GPU kernel optimizer. You specialize in:
 - Converting PyTorch, CUDA, and Triton code to optimized HIP kernels
 - Targeting AMD Instinct MI300X (gfx942) architecture
@@ -57,6 +61,84 @@ _state = {
     "tokenizer": None,
     "engine_type": None,
 }
+
+# Separate state for the base model loaded lazily on /api/compare
+_base_state: dict = {
+    "llm": None,
+    "tokenizer": None,
+    "loading": False,
+    "error": None,
+}
+_base_load_lock = asyncio.Lock()
+
+
+def _load_base_model_sync() -> None:
+    """Synchronously load the base (un-fine-tuned) model for comparison."""
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    logger.info("Loading base model from %s", BASE_MODEL_PATH)
+    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL_PATH, trust_remote_code=True)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    model = AutoModelForCausalLM.from_pretrained(
+        BASE_MODEL_PATH,
+        torch_dtype=torch.bfloat16,
+        device_map="auto",
+        trust_remote_code=True,
+    )
+    model.eval()
+    _base_state["llm"] = model
+    _base_state["tokenizer"] = tokenizer
+    logger.info("Base model loaded.")
+
+
+async def _ensure_base_model() -> bool:
+    """Load base model on first call; thread-safe.  Returns True if available."""
+    if _base_state["llm"] is not None:
+        return True
+    async with _base_load_lock:
+        if _base_state["llm"] is not None:
+            return True
+        try:
+            _base_state["loading"] = True
+            _base_state["error"] = None
+            await asyncio.to_thread(_load_base_model_sync)
+            return True
+        except Exception as exc:
+            _base_state["error"] = str(exc)
+            logger.error("Failed to load base model: %s", exc)
+            return False
+        finally:
+            _base_state["loading"] = False
+
+
+def _generate_base_hf(prompt: str, temperature: float, max_tokens: int) -> str:
+    """Generate with the base model (always HF — base model is never vLLM)."""
+    import torch
+
+    tokenizer = _base_state["tokenizer"]
+    model = _base_state["llm"]
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": prompt},
+    ]
+    text = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+    inputs = tokenizer(text, return_tensors="pt").to(model.device)
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=max_tokens,
+            temperature=temperature,
+            top_p=0.9,
+            do_sample=temperature > 0,
+            pad_token_id=tokenizer.pad_token_id,
+        )
+    return tokenizer.decode(
+        outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True
+    )
 
 
 def build_user_prompt(req: CompileRequest) -> str:
@@ -364,6 +446,70 @@ async def full_pipeline(req: CompileRequest):
     return {
         "compile": compile_resp.dict(),
         "benchmark": bench_resp.dict(),
+    }
+
+
+@app.post("/api/compare")
+async def compare_endpoint(req: CompileRequest):
+    """
+    Run the same prompt through both the base model and the fine-tuned ROCmForge
+    model and return both outputs for a side-by-side demo.
+
+    The base model is loaded lazily on the first request (may take ~30s).
+    If the base model is unavailable (no internet, not enough VRAM, etc.) the
+    endpoint still returns the fine-tuned output with base.available = False.
+    """
+    if _state["llm"] is None:
+        raise HTTPException(503, "Fine-tuned model not loaded")
+
+    user_prompt = build_user_prompt(req)
+
+    # Run both models concurrently if base is already loaded; otherwise run
+    # fine-tuned first (instant) then load+run base.
+    t0 = time.perf_counter()
+    tuned_raw = await asyncio.to_thread(
+        generate, user_prompt, req.temperature, req.max_tokens
+    )
+    tuned_time = time.perf_counter() - t0
+    tuned_code, tuned_warnings = extract_hip_code(tuned_raw)
+
+    base_available = await _ensure_base_model()
+    base_code = ""
+    base_raw = ""
+    base_time = 0.0
+    base_warnings: list[str] = []
+    base_error: Optional[str] = None
+
+    if base_available:
+        try:
+            t0 = time.perf_counter()
+            base_raw = await asyncio.to_thread(
+                _generate_base_hf, user_prompt, req.temperature, req.max_tokens
+            )
+            base_time = time.perf_counter() - t0
+            base_code, base_warnings = extract_hip_code(base_raw)
+        except Exception as exc:
+            base_error = str(exc)
+            base_available = False
+    else:
+        base_error = _base_state.get("error") or "Base model unavailable"
+
+    return {
+        "rocmforge": {
+            "hip_code": tuned_code,
+            "raw_output": tuned_raw,
+            "time_s": round(tuned_time, 2),
+            "warnings": tuned_warnings,
+        },
+        "base": {
+            "hip_code": base_code,
+            "raw_output": base_raw,
+            "time_s": round(base_time, 2),
+            "available": base_available,
+            "warnings": base_warnings,
+            "error": base_error,
+            "model_name": BASE_MODEL_PATH,
+        },
     }
 
 

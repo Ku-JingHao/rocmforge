@@ -1,6 +1,7 @@
 import type {
   CompileRequest,
   CompileResponse,
+  CompareResponse,
   BenchmarkResult,
   FullPipelineResponse,
   HealthResponse,
@@ -40,6 +41,13 @@ export async function benchmark(hip_code: string, operation = 'auto'): Promise<B
       problem_size: { M: 4096, N: 4096, K: 4096 },
       dtype: 'fp16',
     }),
+  });
+}
+
+export async function liveCompare(req: CompileRequest): Promise<CompareResponse> {
+  return jsonFetch<CompareResponse>('/api/compare', {
+    method: 'POST',
+    body: JSON.stringify(req),
   });
 }
 
