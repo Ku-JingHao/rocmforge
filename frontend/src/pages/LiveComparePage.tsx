@@ -26,6 +26,53 @@ function detectPatterns(code: string): Pattern[] {
   return AMD_PATTERNS.filter((p) => p.regex.test(code));
 }
 
+// ─── Scoring ──────────────────────────────────────────────────────────────────
+
+interface ScoreBreakdown {
+  total: number;          // 0–100
+  hipSyntax: number;      // 0–25: uses __global__, HIP includes
+  mi300xPatterns: number; // 0–40: MFMA, wavefront-64, gfx942, LDS, launch_bounds
+  codeQuality: number;    // 0–20: __restrict__, vectorised, no CUDA masks
+  compilable: number;     // 0–15: no CUDA-only symbols, has kernel signature
+}
+
+function scoreOutput(code: string): ScoreBreakdown {
+  if (!code.trim()) return { total: 0, hipSyntax: 0, mi300xPatterns: 0, codeQuality: 0, compilable: 0 };
+
+  // HIP syntax (0–25)
+  let hipSyntax = 0;
+  if (/__global__/.test(code))           hipSyntax += 10;
+  if (/hip\/hip_runtime/.test(code))     hipSyntax += 8;
+  if (/hip\/hip_fp16/.test(code))        hipSyntax += 4;
+  if (/__device__|__host__/.test(code))  hipSyntax += 3;
+
+  // MI300X-specific patterns (0–40) — 8 pts each, capped at 40
+  const mi300xChecks = [
+    /__builtin_amdgcn_mfma/,             // MFMA intrinsic
+    /offset\s*=\s*32|wavefront/i,        // wavefront-64 reduction
+    /gfx942|gfx9/,                       // explicit arch targeting
+    /__launch_bounds__/,                  // occupancy hint
+    /__shfl_down(?!_sync)/,              // AMD-style shuffle (no 32-bit mask)
+  ];
+  const mi300xPatterns = Math.min(40, mi300xChecks.filter((r) => r.test(code)).length * 8);
+
+  // Code quality (0–20)
+  let codeQuality = 0;
+  if (/__restrict__/.test(code))                       codeQuality += 6;
+  if (/half8|float4|float8|int4/.test(code))           codeQuality += 6;  // vectorised types
+  if (!/__shfl_down_sync\s*\(0xffffffff/.test(code))   codeQuality += 5;  // no NVIDIA masks
+  if (/extern\s+__shared__|__shared__/.test(code))     codeQuality += 3;  // LDS used
+
+  // Compilable heuristic (0–15)
+  let compilable = 0;
+  if (/__global__\s+void\s+\w+\s*\(/.test(code))       compilable += 8;  // proper kernel sig
+  if (!/__syncwarp|cooperative_groups|cub::/.test(code)) compilable += 4; // no CUDA-only libs
+  if (/#include\s+<hip\//.test(code))                   compilable += 3;  // HIP headers present
+
+  const total = Math.min(100, hipSyntax + mi300xPatterns + codeQuality + compilable);
+  return { total, hipSyntax, mi300xPatterns, codeQuality, compilable };
+}
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function PatternBadges({ code, empty }: { code: string; empty?: boolean }) {
@@ -143,6 +190,91 @@ function OutputPane({
           Output will appear here
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Metrics scorecard ────────────────────────────────────────────────────────
+
+function ScoreBar({ label, base, tuned, max }: { label: string; base: number; tuned: number; max: number }) {
+  const basePct  = Math.round((base  / max) * 100);
+  const tunedPct = Math.round((tuned / max) * 100);
+  const winner   = tuned > base ? 'tuned' : tuned < base ? 'base' : 'tie';
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="text-slate-400">{label}</span>
+        <div className="flex gap-3">
+          <span className={winner === 'base' ? 'font-bold text-rose-300' : 'text-slate-500'}>
+            Base: {base}/{max}
+          </span>
+          <span className={winner === 'tuned' ? 'font-bold text-green-300' : 'text-slate-500'}>
+            ROCmForge: {tuned}/{max}
+          </span>
+        </div>
+      </div>
+      <div className="flex gap-1 h-3">
+        {/* Base bar */}
+        <div className="flex-1 rounded bg-slate-800 overflow-hidden">
+          <div
+            className="h-full rounded bg-rose-700/70 transition-all duration-500"
+            style={{ width: `${basePct}%` }}
+          />
+        </div>
+        {/* Fine-tuned bar */}
+        <div className="flex-1 rounded bg-slate-800 overflow-hidden">
+          <div
+            className="h-full rounded bg-green-600/80 transition-all duration-500"
+            style={{ width: `${tunedPct}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MetricsScorecard({ result }: { result: CompareResponse }) {
+  const baseScore  = scoreOutput(result.base.available ? result.base.hip_code : '');
+  const tunedScore = scoreOutput(result.rocmforge.hip_code);
+  const delta      = tunedScore.total - baseScore.total;
+
+  return (
+    <div className="panel p-4 space-y-4">
+      {/* Header with big scores */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h3 className="text-sm font-semibold text-slate-200">Evaluation Metrics</h3>
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-rose-400">{baseScore.total}</div>
+            <div className="text-[11px] text-slate-500">Base model score</div>
+          </div>
+          <div className="text-center">
+            <div className={`text-2xl font-bold ${delta > 0 ? 'text-green-400' : 'text-slate-400'}`}>
+              {delta > 0 ? `+${delta}` : delta}
+            </div>
+            <div className="text-[11px] text-slate-500">Improvement</div>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-amd-red">{tunedScore.total}</div>
+            <div className="text-[11px] text-slate-500">ROCmForge score</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Per-category bars */}
+      <div className="space-y-3">
+        <ScoreBar label="HIP syntax"           base={baseScore.hipSyntax}      tuned={tunedScore.hipSyntax}      max={25} />
+        <ScoreBar label="MI300X optimizations" base={baseScore.mi300xPatterns} tuned={tunedScore.mi300xPatterns} max={40} />
+        <ScoreBar label="Code quality"         base={baseScore.codeQuality}    tuned={tunedScore.codeQuality}    max={20} />
+        <ScoreBar label="Compilable heuristic" base={baseScore.compilable}     tuned={tunedScore.compilable}     max={15} />
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 pt-1 text-[10px] text-slate-500">
+        <div className="flex items-center gap-1.5"><span className="inline-block w-3 h-2 rounded bg-rose-700/70" /> Base model</div>
+        <div className="flex items-center gap-1.5"><span className="inline-block w-3 h-2 rounded bg-green-600/80" /> ROCmForge</div>
+        <span className="ml-auto">Scores out of 100 — higher = better MI300X kernel quality</span>
+      </div>
     </div>
   );
 }
@@ -355,6 +487,9 @@ export function LiveComparePage() {
           loading={runState === 'running'}
         />
       </div>
+
+      {/* Metrics scorecard — shown after a completed run */}
+      {result && runState === 'done' && <MetricsScorecard result={result} />}
 
       {/* Diff summary — only shown after a completed run */}
       {result && runState === 'done' && <DiffSummary result={result} />}
