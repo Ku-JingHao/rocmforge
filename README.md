@@ -16,7 +16,7 @@ ROCmForge is a fine-tuned **Qwen2.5-Coder-7B-Instruct** model that converts PyTo
 
 ## Table of Contents
 
-1. [Why Fine-Tuning Beats GPT-4](#why-fine-tuning-beats-gpt-4)
+1. [Why Fine-Tuning](#why-fine-tuning)
 2. [System Architecture](#system-architecture)
 3. [Project Layout](#project-layout)
 4. [Quick Start](#quick-start)
