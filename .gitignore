@@ -42,3 +42,5 @@ rocmforge/rocmforge_sandbox_*/
 
 checkpoints/
 rocmforge-7b-merged/
+
+.env*
