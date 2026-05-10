@@ -103,9 +103,8 @@ rocmforge/
 │   └── 07_run_pipeline.sh      # orchestrate all 6 stages
 │
 ├── data/
-│   ├── raw/                    # cloned GitHub repos        (.gitignored)
 │   └── processed/              # JSONL intermediates + train.jsonl / val.jsonl
-│                               #                             (.gitignored)
+│                               
 │
 ├── training/                   # Phase 2: LoRA fine-tuning
 │   ├── config.yaml             # all hyperparameters (single source of truth)
@@ -142,11 +141,9 @@ rocmforge/
 │   ├── index.html
 │   ├── package.json
 │   ├── vite.config.ts          # /api/* proxy → localhost:8001
-│   └── README.md
 │
 ├── requirements.txt
 ├── vercel.json                 # static frontend deploy
-├── ROCmForge-Implementation-Plan.md
 └── README.md
 ```
 
